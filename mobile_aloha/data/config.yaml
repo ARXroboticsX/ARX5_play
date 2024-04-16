@@ -1,0 +1,29 @@
+camera_config:
+  original_image:
+    img_left_topic: '/camera_l/color/image_raw'
+    img_right_topic: '/camera_r/color/image_raw'
+    img_front_topic: '/camera_f/color/image_raw'
+
+    img_left_depth_topic: '/camera_l/depth/image_rect_raw'
+    img_right_depth_topic: '/camera_r/depth/image_rect_raw'
+    img_front_depth_topic: '/camera_f/depth/image_rect_raw'
+  compress_image:
+    img_left_topic: '/camera_l/color/image_raw/compressed'
+    img_right_topic: '/camera_r/color/image_raw/compressed'
+    img_front_topic: '/camera_f/color/image_raw/compressed'
+
+    img_left_depth_topic: '/camera_l/depth/image_rect_raw/compressed'
+    img_right_depth_topic: '/camera_r/depth/image_rect_raw/compressed'
+    img_front_depth_topic: '/camera_f/depth/image_rect_raw/compressed'
+
+arm_config:
+  master_arm_left_topic: '/master/joint_left'
+  master_arm_right_topic: '/master/joint_right'
+  puppet_arm_left_topic: '/puppet/joint_left'
+  puppet_arm_right_topic: '/puppet/joint_right'
+  puppet_arm_left_cmd_topic: '/master/joint_left'
+  puppet_arm_right_cmd_topic: '/master/joint_right'
+
+base_config:
+  robot_base_topic: '/odom_raw'
+  robot_base_cmd_topic: '/cmd_vel'
