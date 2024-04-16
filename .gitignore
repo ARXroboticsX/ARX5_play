@@ -339,3 +339,4 @@ cython_debug/
 #.idea/
 
 **/venv
+.catkin_workspace
