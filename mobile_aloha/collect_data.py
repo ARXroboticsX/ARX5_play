@@ -192,7 +192,7 @@ def save_data(opt, timesteps, actions, dataset_path):
 
             _ = image.create_dataset(cam_name, image_shape, 'uint8', chunks=image_chunks)
             if opt.use_depth_image:
-                _ = depth.create_dataset(cam_name, depth_shape, 'uint16', chunks=depth_chunks)
+                _ = depth.create_dataset(cam_name, depth_shape, 'uint8', chunks=depth_chunks)
 
         _ = obs.create_dataset('qpos', (data_size, 14))
         _ = obs.create_dataset('qvel', (data_size, 14))

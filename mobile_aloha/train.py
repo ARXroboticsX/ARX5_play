@@ -92,6 +92,7 @@ def train(opt):
     config = {
         'num_epochs': opt.epochs,
         'ckpt_dir': opt.ckpt_dir,
+        'ckpt_name': opt.ckpt_name,
         'policy_class': opt.policy_class,
         'policy_config': policy_config,
         'seed': opt.seed,
@@ -111,12 +112,6 @@ def train(opt):
         pickle.dump(stats, f)
 
     best_ckpt_info = train_process(train_dataloader, val_dataloader, config, stats)
-    best_epoch, min_val_loss, best_state_dict = best_ckpt_info
-
-    # save best checkpoint
-    ckpt_path = os.path.join(opt.ckpt_dir, opt.ckpt_name)
-    torch.save(best_state_dict, ckpt_path)
-    print(f'Best ckpt, val loss {min_val_loss:.6f} @ epoch{best_epoch}')
 
 
 def make_policy(policy_class, policy_config, pretrain_ckpt):
@@ -184,6 +179,7 @@ def train_process(train_dataloader, val_dataloader, config, stats):
 
     num_epochs = config['num_epochs']
     ckpt_dir = config['ckpt_dir']
+    ckpt_name = config['ckpt_name']
     seed = config['seed']
     policy_class = config['policy_class']
     policy_config = config['policy_config']
@@ -216,6 +212,11 @@ def train_process(train_dataloader, val_dataloader, config, stats):
             if epoch_val_loss < min_val_loss:
                 min_val_loss = epoch_val_loss
                 best_ckpt_info = (epoch, min_val_loss, deepcopy(policy.serialize()))
+
+                # save best checkpoint
+                ckpt_path = os.path.join(ckpt_dir, ckpt_name)
+                torch.save(deepcopy(policy.serialize()), ckpt_path)
+                print(f'Best ckpt, val loss {min_val_loss:.6f} @ epoch{epoch}')
         print(f'Val loss:   {epoch_val_loss:.5f}')
         summary_string = ''
         for k, v in epoch_summary.items():
@@ -307,8 +308,8 @@ def parse_opt(known=False):
     parser.add_argument('--weight_decay', type=float, default=1e-4, help='weight decay')
     parser.add_argument('--dilation', action='store_true',
                         help="replace stride with dilation in the last convolutional block (DC5)")
-    parser.add_argument('--position_embedding', type=str, choices=('sine', 'learned'), default='sine',
-                        help="type of positional embedding to use on top of the image features")
+    parser.add_argument('--position_embedding', type=str, choices=('sine', 'learned'),
+                        default='sine', help="type of positional embedding to use on top of the image features")
     parser.add_argument('--masks', action='store_true',
                         help="train segmentation head if the flag is provided")
 
