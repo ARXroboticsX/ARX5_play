@@ -267,7 +267,7 @@ def inference_process(opt, config, ros_operator, policy, stats, t, pre_action):
         start_time = time.time()
         all_actions = policy(curr_image, curr_depth_image, qpos)
         end_time = time.time()
-        print("model cost time: ", end_time -start_time)
+        print("model cost time: ", end_time - start_time)
 
         inference_lock.acquire()
         inference_actions = all_actions.cpu().detach().numpy()
@@ -810,7 +810,7 @@ def parse_opt(known=False):
     parser.add_argument('--publish_rate', type=int, default=90, help='publish rate')
     parser.add_argument('--pos_lookahead_step', type=int, default=0, help='pos lookahead step')
     parser.add_argument('--chunk_size', type=int, default=30, help='chunk size')
-    parser.add_argument('--arm_steps_length', type=float,
+    parser.add_argument('--arm_steps_length', nargs='+', type=float,
                         default=[0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.2], help='arm_steps_length')
 
     parser.add_argument('--use_actions_interpolation', action='store_true',
