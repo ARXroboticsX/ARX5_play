@@ -251,8 +251,6 @@ def inference_process(opt, config, ros_operator, policy, stats, t, pre_action):
         else:
             obs['base_vel'] = [0.0, 0.0]
 
-        # qpos_numpy = np.array(obs['qpos'])
-
         # 归一化处理qpos 并转到cuda
         qpos = pre_pos_process(obs['qpos'])
         qpos = torch.from_numpy(qpos).float().cuda().unsqueeze(0)
@@ -377,6 +375,7 @@ def model_inference(opt, config, ros_operator):
                         actions_for_curr_step = all_time_actions[:, t]
                         actions_populated = np.all(actions_for_curr_step != 0, axis=1)
                         actions_for_curr_step = actions_for_curr_step[actions_populated]
+
                         k = 0.01
                         exp_weights = np.exp(-k * np.arange(len(actions_for_curr_step)))
                         exp_weights = exp_weights / exp_weights.sum()
@@ -829,8 +828,8 @@ def parse_opt(known=False):
 
 def main():
     opt = parse_opt()
-    config = load_yaml(opt.data)
-    ros_operator = RosOperator(opt, config)
+    data = load_yaml(opt.data)
+    ros_operator = RosOperator(opt, data)
     config = get_model_config(opt)
     model_inference(opt, config, ros_operator)
 
