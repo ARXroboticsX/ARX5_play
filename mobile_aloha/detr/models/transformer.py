@@ -15,7 +15,9 @@ import torch.nn.functional as F
 from torch import nn, Tensor
 
 import IPython
+
 e = IPython.embed
+
 
 class Transformer(nn.Module):
 
@@ -30,7 +32,7 @@ class Transformer(nn.Module):
                                                 dropout, activation, normalize_before)
         # 归一化层
         encoder_norm = nn.LayerNorm(d_model) if normalize_before else None
-        
+
         # 构建多层编码层
         self.encoder = TransformerEncoder(encoder_layer, num_encoder_layers, encoder_norm)
 
@@ -38,7 +40,7 @@ class Transformer(nn.Module):
         decoder_layer = TransformerDecoderLayer(d_model, nhead, dim_feedforward,
                                                 dropout, activation, normalize_before)
         decoder_norm = nn.LayerNorm(d_model)
-        
+
         # 构建多层解码层
         self.decoder = TransformerDecoder(decoder_layer, num_decoder_layers, decoder_norm,
                                           return_intermediate=return_intermediate_dec)
@@ -58,21 +60,24 @@ class Transformer(nn.Module):
                 robot_state_input, robot_state_pos=None,
                 latent_input=None, latent_pos=None):
         # TODO flatten only when input has H and W
-        if len(src.shape) == 4: # has H and W
+        if len(src.shape) == 4:  # has H and W
             # flatten NxCxHxW to HWxNxC
             bs, c, h, w = src.shape
             src = src.flatten(2).permute(2, 0, 1)
-            src_is_pad = torch.full((src.shape[1], src.shape[0]), False).to(src.device)  # False: not a padding
-            latent_is_pad = torch.full((latent_input.shape[1], latent_input.shape[0]), False).to(src.device)  # False: not a padding
-            robot_state_is_pad = torch.full((robot_state_input.shape[1], robot_state_input.shape[0]), False).to(src.device)  # False: not a padding
+            src_is_pad = torch.zeros((src.shape[1], src.shape[0]), dtype=torch.bool, device=src.device)
+            latent_is_pad = torch.zeros((latent_input.shape[1], latent_input.shape[0]), dtype=torch.bool,
+                                        device=src.device)
+            robot_state_is_pad = torch.zeros((robot_state_input.shape[1], robot_state_input.shape[0]), dtype=torch.bool,
+                                             device=src.device)
             pos = pos.flatten(2).permute(2, 0, 1).repeat(1, bs, 1)
             query_embed = query_embed.unsqueeze(1).repeat(1, bs, 1)
             # mask = mask.flatten(1)
             robot_state_pos = robot_state_pos.unsqueeze(1).repeat(1, bs, 1)  # seq, bs, dim
             latent_pos = latent_pos.unsqueeze(1).repeat(1, bs, 1)  # seq, bs, dim
-            pos = torch.cat([latent_pos, pos, robot_state_pos], axis=0)
-            src = torch.cat([latent_input, src, robot_state_input], axis=0)
-            is_pad = torch.cat([latent_is_pad, src_is_pad, robot_state_is_pad], axis=1)
+            pos = torch.cat([latent_pos, pos, robot_state_pos], dim=0)
+            src = torch.cat([latent_input, src, robot_state_input], dim=0)
+
+            is_pad = torch.cat([latent_is_pad, src_is_pad, robot_state_is_pad], dim=1)
         else:
             assert len(src.shape) == 3
             # flatten NxHWxC to HWxNxC
@@ -83,7 +88,7 @@ class Transformer(nn.Module):
 
         tgt = torch.zeros_like(query_embed)
         memory = self.encoder(src, pos=pos, src_key_padding_mask=is_pad)
-        
+
         hs = self.decoder(tgt, memory,
                           query_pos=query_embed,
                           pos=pos,

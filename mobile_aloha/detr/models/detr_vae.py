@@ -118,14 +118,16 @@ class DETRVAE(nn.Module):
         if is_training and self.kl_weight != 0:  # hidden_dim输入参数是512
             action_embed = self.encoder_action_proj(actions)  # (bs, seq, hidden_dim)
             robot_state_embed = self.encoder_joint_proj(robot_state)  # (bs, hidden_dim)
-            robot_state_embed = torch.unsqueeze(robot_state_embed, axis=1)  # (bs, 1, hidden_dim)
+            robot_state_embed = torch.unsqueeze(robot_state_embed, dim=1)  # (bs, 1, hidden_dim)
             cls_embed = self.cls_embed.weight  # (1, hidden_dim)
-            cls_embed = torch.unsqueeze(cls_embed, axis=0).repeat(bs, 1, 1)  # (bs, 1, hidden_dim)
+            cls_embed = torch.unsqueeze(cls_embed, dim=0).repeat(bs, 1, 1)  # (bs, 1, hidden_dim)
             encoder_input = torch.cat([cls_embed, robot_state_embed,
-                                       action_embed], axis=1)  # (bs, seq+1, hidden_dim)
+                                       action_embed], dim=1)  # (bs, seq+1, hidden_dim)
             encoder_input = encoder_input.permute(1, 0, 2)  # (seq+1, bs, hidden_dim)
-            cls_joint_is_pad = torch.full((bs, 2), False).to(robot_state.device)  # False: not a padding
-            is_pad = torch.cat([cls_joint_is_pad, action_is_pad], axis=1)  # (bs, seq+1)
+            cls_joint_is_pad = torch.zeros((bs, 2), dtype=torch.bool)
+            cls_joint_is_pad = cls_joint_is_pad.to(robot_state.device)
+
+            is_pad = torch.cat([cls_joint_is_pad, action_is_pad], dim=1)  # (bs, seq+1)
 
             # obtain position embedding  合并位置编码
             pos_embed = self.pos_table.clone().detach()
@@ -156,17 +158,17 @@ class DETRVAE(nn.Module):
             src_pos = src_pos[0]
             if self.depth_backbones is not None and depth_image is not None:
                 features_depth = self.depth_backbones[cam_id](depth_image[:, cam_id].unsqueeze(dim=1))
-                all_cam_features.append(self.input_proj(torch.cat([features, features_depth], axis=1)))
+                all_cam_features.append(self.input_proj(torch.cat([features, features_depth], dim=1)))
             else:
                 all_cam_features.append(self.input_proj(features))
             all_cam_pos.append(src_pos)
         # proprioception features
         robot_state_input = self.input_proj_robot_state(robot_state)
-        robot_state_input = torch.unsqueeze(robot_state_input, axis=0)
-        latent_input = torch.unsqueeze(latent_input, axis=0)
+        robot_state_input = torch.unsqueeze(robot_state_input, dim=0)
+        latent_input = torch.unsqueeze(latent_input, dim=0)
         # fold camera dimension into width dimension
-        src = torch.cat(all_cam_features, axis=3)
-        src_pos = torch.cat(all_cam_pos, axis=3)
+        src = torch.cat(all_cam_features, dim=3)
+        src_pos = torch.cat(all_cam_pos, dim=3)
         hs = self.transformer(self.query_embed.weight,
                               src, src_pos, None,
                               robot_state_input, self.robot_state_pos.weight,
