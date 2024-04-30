@@ -89,8 +89,12 @@ def export_model(config):
     else:
         state = torch.randn(1, 14).cuda()
 
-    torch.onnx.export(policy, (image, depth_image, state), 'inference.onnx')
-    print()
+    # 导出onnxx
+    if not os.path.exists(config['onnx_dir']):
+        os.makedirs(config['onnx_dir'])
+    onnx_path = os.path.join(config['onnx_dir'], config['onnx_name'])
+    torch.onnx.export(policy, (image, depth_image, state), onnx_path)
+    print('Export to ONNX: {}'.format(onnx_path))
 
 
 def parse_opt(known=False):
