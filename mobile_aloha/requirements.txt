@@ -16,3 +16,4 @@ ipython
 diffusers
 termcolor
 imageio
+onnx
